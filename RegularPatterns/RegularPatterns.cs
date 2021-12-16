@@ -73,17 +73,24 @@ public struct Pattern
     public static Pattern Multi(params string[] texts) => Multi(false, texts);
     public static Pattern Multi(bool ignoreCasing, params string[] texts) => new((str, s, e, p) =>
     {
-        int idx = s, fails = 0;
+        int idx = s;
         foreach (string text in texts)
-            for (int j = 0; j < text.Length && idx < e; idx++, j++)
-                if (ignoreCasing ? char.ToUpperInvariant(text[j]) == char.ToUpperInvariant(str[idx]) : text[j] != str[idx])
-                {
-                    fails++;
+        {
+            idx = s;
+            int j = 0;
+            for (; j < text.Length && idx < e; idx++)
+                if (ignoreCasing ? char.ToUpperInvariant(text[j]) == char.ToUpperInvariant(str[idx]) : text[j] == str[idx])
+                    j++;
+                else
                     break;
-                }
-        if (fails == texts.Length)
-            return 0;
-        return p.Logic(str, idx, e, p);
+            if (j == text.Length)
+            {
+                int result = p.Logic(str, idx, e, p);
+                if (result > 0)
+                    return result;
+            }
+        }
+        return 0;
     });
 
     public static Pattern Custom(Func<string, int, int, Pattern, int> logic) =>

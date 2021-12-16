@@ -25,6 +25,12 @@ this is some random text
     <media:thumbnail url = ""https://u.livechart.me/anime/10919/poster_image/ee105a8db5d5a572c25b69105419f302.png?style=small&amp;format=jpg"" width=""175"" height=""250"" />
 </item>";
 
+string test = "anime dfgfbdbhelloasgasdgsgaworld";
+
+StringRange range = test.RangeOf(Multi("pokemon", "anime", "hello"), Any, Multi("anime", "hello", "team"));
+
+Console.WriteLine(range.Range);
+Console.WriteLine(range);
 
 foreach (StringRange range in rss.RangesOf(Text("<item>"), Any, Text("</item>")))
 {

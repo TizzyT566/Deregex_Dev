@@ -6,6 +6,7 @@
 		<LangVersion>10</LangVersion>
 		<Description>A small alternative to regex.</Description>
 		<RepositoryUrl>https://github.com/TizzyT566/Deregex_Dev</RepositoryUrl>
+		<Authors>Thien H.</Authors>
 	</PropertyGroup>
 
 </Project>
