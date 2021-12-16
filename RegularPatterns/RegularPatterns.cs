@@ -1,4 +1,7 @@
-﻿namespace System.Text.RegularPatterns;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace System.Text.RegularPatterns;
 
 public struct StringRange
 {
@@ -21,7 +24,7 @@ public struct StringRange
 
 public struct Pattern
 {
-    public Func<string, int, int, Pattern, int> Logic { get; init; }
+    public Func<string, int, int, Pattern, int> Logic { get; }
 
     public Pattern(Func<string, int, int, Pattern, int> logic) => Logic = logic;
 
