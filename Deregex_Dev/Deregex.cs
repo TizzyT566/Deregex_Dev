@@ -23,10 +23,7 @@ public struct Pattern
 {
     public Func<string, int, int, Pattern, int> Logic { get; init; }
 
-    public Pattern(Func<string, int, int, Pattern, int> logic)
-    {
-        Logic = logic;
-    }
+    public Pattern(Func<string, int, int, Pattern, int> logic) => Logic = logic;
 
     public Pattern(params Pattern[] patterns)
     {
