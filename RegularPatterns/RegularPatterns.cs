@@ -20,32 +20,22 @@ public struct StringRange
     }
     public override string ToString() => Content[Range];
     public static implicit operator Range(StringRange sr) => sr.Range;
+    public static implicit operator string(StringRange sr) => sr.ToString();
 }
 
 public struct Pattern
 {
     public Func<string, int, int, Pattern, int> Logic { get; }
+    public string Name { get; }
 
-    public Pattern(Func<string, int, int, Pattern, int> logic) => Logic = logic;
-
-    public Pattern(params Pattern[] patterns)
+    public Pattern(Func<string, int, int, Pattern, int> logic, string name = "")
     {
-        Logic = (str, s, e, p) =>
-        {
-            Pattern patternChain = patterns[^1];
-            foreach (Pattern pattern in patterns.Reverse().Skip(1))
-            {
-                if (pattern.Equals(End))
-                    throw new Exception("'Pattern.End' can only be placed at end of pattern sequence.");
-                Pattern crntPattern = patternChain;
-                patternChain = new((str, s, e, p) => pattern.Logic(str, s, e, crntPattern));
-            }
-            return patterns[0].Logic(str, s, e, patternChain);
-        };
+        Logic = logic;
+        Name = name;
     }
 
-    public readonly static Pattern None = new((str, s, e, p) => s == e ? s : -1);
-    public readonly static Pattern End = new((str, s, e, p) => s);
+    public readonly static Pattern None = new((str, s, e, p) => s == e ? s : -1, nameof(None));
+    public readonly static Pattern End = new((str, s, e, p) => s, nameof(End));
     public readonly static Pattern Any = new((str, s, e, p) =>
     {
         if (p.Equals(None) || p.Equals(End))
@@ -59,19 +49,35 @@ public struct Pattern
                 return -1;
         }
         return 0;
-    });
+    }, nameof(Any));
 
-    public static Pattern Text(string text) => Text(false, text);
-    public static Pattern Text(bool ignoreCasing, string text) => new((str, s, e, p) =>
+    public static Pattern Except(params string[] texts) =>
+        Except(false, texts);
+    public static Pattern Except(bool ignoreCasing, params string[] texts) => new((str, s, e, p) =>
     {
-        for (int j = 0; j < text.Length && s < e; s++, j++)
-            if (ignoreCasing ? char.ToUpperInvariant(text[j]) == char.ToUpperInvariant(str[s]) : text[j] != str[s])
-                return 0;
-        return p.Logic(str, s, e, p);
-    });
+        int idx = s;
+        foreach (string text in texts)
+        {
+            idx = s;
+            int j = 0;
+            for (; j < text.Length && idx < e; idx++)
+            {
+                if (ignoreCasing ? char.ToUpperInvariant(text[j]) == char.ToUpperInvariant(str[idx]) : text[j] == str[idx])
+                    j++;
+                else
+                    break;
+            }
 
-    public static Pattern Multi(params string[] texts) => Multi(false, texts);
-    public static Pattern Multi(bool ignoreCasing, params string[] texts) => new((str, s, e, p) =>
+            if (j == text.Length)
+            {
+                return -1;
+            }
+        }
+        return p.Logic(str, idx, e, p);
+    }, nameof(Except));
+
+    public static Pattern Text(params string[] texts) => Text(false, texts);
+    public static Pattern Text(bool ignoreCasing, params string[] texts) => new((str, s, e, p) =>
     {
         int idx = s;
         foreach (string text in texts)
@@ -91,7 +97,7 @@ public struct Pattern
             }
         }
         return 0;
-    });
+    }, nameof(Text));
 
     public static Pattern Repeat(string text, int atleast = 0, int atmost = int.MaxValue) =>
         Repeat(false, text, atleast, atmost);
@@ -121,10 +127,7 @@ public struct Pattern
             else
                 return -1;
         }
-    });
-
-    public static Pattern Custom(Func<string, int, int, Pattern, int> logic) =>
-        new(logic);
+    }, nameof(Repeat));
 }
 
 public static class PatternExtensions
@@ -140,11 +143,15 @@ public static class PatternExtensions
         int length = Math.Min(@this.Length, range.End.Value);
         if (patterns.Length == 1)
             return patterns[0].Logic(@this, range.Start.Value, length, Pattern.None) > 0;
+        bool lastPatternWasAny = patterns[^1].Name == nameof(Pattern.Any);
         Pattern patternChain = new((str, s, e, p) => patterns[^1].Logic(str, s, e, Pattern.None));
         foreach (Pattern pattern in patterns.Skip(1).Reverse().Skip(1))
         {
-            if (pattern.Equals(Pattern.End))
-                throw new Exception("'Pattern.End' can only be placed at end of pattern sequence.");
+            if (lastPatternWasAny && pattern.Name == nameof(Pattern.Except))
+                throw new InvalidOperationException($"'{nameof(Pattern.Any)}' cannot come immediately after '{nameof(Pattern.Except)}'.");
+            lastPatternWasAny = pattern.Name == nameof(Pattern.Any);
+            if (pattern.Name == nameof(Pattern.End))
+                throw new InvalidOperationException($"'{nameof(Pattern.End)}' can only be placed at end of pattern sequence.");
             Pattern crntPattern = patternChain;
             patternChain = new((str, s, e, p) => pattern.Logic(@this, s, e, crntPattern));
         }
@@ -172,11 +179,15 @@ public static class PatternExtensions
         }
         else
         {
+            bool lastPatternWasAny = patterns[^1].Name == nameof(Pattern.Any);
             Pattern patternChain = new((str, s, e, p) => patterns[^1].Logic(str, s, e, Pattern.End));
             foreach (Pattern pattern in patterns.Skip(1).Reverse().Skip(1))
             {
-                if (pattern.Equals(Pattern.End))
-                    throw new Exception("'Pattern.End' can only be placed at end of pattern sequence.");
+                if (lastPatternWasAny && pattern.Name == nameof(Pattern.Except))
+                    throw new InvalidOperationException($"'{nameof(Pattern.Any)}' cannot come immediately after '{nameof(Pattern.Except)}'.");
+                lastPatternWasAny = pattern.Name == nameof(Pattern.Any);
+                if (pattern.Name == nameof(Pattern.End))
+                    throw new InvalidOperationException($"'{nameof(Pattern.End)}' can only be placed at end of pattern sequence.");
                 Pattern crntPattern = patternChain;
                 patternChain = new((str, s, e, p) => pattern.Logic(@this, s, e, crntPattern));
             }
@@ -213,11 +224,15 @@ public static class PatternExtensions
         }
         else
         {
+            bool lastPatternWasAny = patterns[^1].Equals(Pattern.Any);
             Pattern patternChain = new((str, s, e, p) => patterns[^1].Logic(str, s, e, Pattern.End));
             foreach (Pattern pattern in patterns.Skip(1).Reverse().Skip(1))
             {
-                if (pattern.Equals(Pattern.End))
-                    throw new Exception("'Pattern.End' can only be placed at end of pattern sequence.");
+                if (lastPatternWasAny && pattern.Name == nameof(Pattern.Except))
+                    throw new InvalidOperationException($"'{nameof(Pattern.Any)}' cannot come immediately after '{nameof(Pattern.Except)}'.");
+                lastPatternWasAny = pattern.Name == nameof(Pattern.Any);
+                if (pattern.Name == nameof(Pattern.End))
+                    throw new InvalidOperationException($"'{nameof(Pattern.End)}' can only be placed at end of pattern sequence.");
                 Pattern crntPattern = patternChain;
                 patternChain = new((str, s, e, p) => pattern.Logic(@this, s, e, crntPattern));
             }

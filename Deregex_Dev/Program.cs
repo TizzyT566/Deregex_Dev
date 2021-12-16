@@ -25,26 +25,26 @@ this is some random text
     <media:thumbnail url = ""https://u.livechart.me/anime/10919/poster_image/ee105a8db5d5a572c25b69105419f302.png?style=small&amp;format=jpg"" width=""175"" height=""250"" />
 </item>";
 
-string test = "esahdasgavrgtestfgzfanimeanimeanimeerhdfzhgHelloWorld";
+string test = "hellogn fjfdgworld helloworld";
 
-StringRange repeat = test.RangeOf(Text("test"), Any, Repeat("anime", 1, 2), Any, Text("HelloWorld"));
-Console.WriteLine(repeat);
+StringRange except = test.RangeOf(Text("hello"), Any, Except(false, " "), Text("world"));
+Console.WriteLine(except);
 
-//StringRange multiTest = test.RangeOf(Multi("pokemon", "anime", "hello"), Any, Multi("anime", "hello", "team"));
+StringRange multiTest = test.RangeOf(Text("pokemon", "anime", "hello"), Any, Text("anime", "hello", "team"));
 
-//Console.WriteLine(multiTest.Range);
-//Console.WriteLine(multiTest);
+Console.WriteLine(multiTest.Range);
+Console.WriteLine(multiTest);
 
-//foreach (StringRange range in rss.RangesOf(Text("<item>"), Any, Text("</item>")))
-//{
-//    StringRange guid = rss.RangeOf(range, Text("<guid>")).Between(Text("</guid>"));
-//    Console.WriteLine($" Guid: {guid}");
+foreach (StringRange range in rss.RangesOf(Text("<item>"), Any, Text("</item>")))
+{
+    StringRange guid = rss.RangeOf(range, Text("<guid>")).Between(Text("</guid>"));
+    Console.WriteLine($" Guid: {guid}");
 
-//    StringRange link = rss.RangeOf(guid.End, Text("<link>")).Between(Text("</link>"));
-//    Console.WriteLine($" Link: {link}");
+    StringRange link = rss.RangeOf(guid.End, Text("<link>")).Between(Text("</link>"));
+    Console.WriteLine($" Link: {link}");
 
-//    StringRange title = rss.RangeOf(link.End, Text("<title>")).Between(Text("</title>"));
-//    Console.WriteLine($"Title: {title}");
+    StringRange title = rss.RangeOf(link.End, Text("<title>")).Between(Text("</title>"));
+    Console.WriteLine($"Title: {title}");
 
-//    Console.WriteLine();
-//}
+    Console.WriteLine();
+}
