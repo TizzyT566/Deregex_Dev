@@ -27,10 +27,10 @@ this is some random text
 
 string test = "anime dfgfbdbhelloasgasdgsgaworld";
 
-StringRange range = test.RangeOf(Multi("pokemon", "anime", "hello"), Any, Multi("anime", "hello", "team"));
+StringRange multiTest = test.RangeOf(Multi("pokemon", "anime", "hello"), Any, Multi("anime", "hello", "team"));
 
-Console.WriteLine(range.Range);
-Console.WriteLine(range);
+Console.WriteLine(multiTest.Range);
+Console.WriteLine(multiTest);
 
 foreach (StringRange range in rss.RangesOf(Text("<item>"), Any, Text("</item>")))
 {
