@@ -93,6 +93,36 @@ public struct Pattern
         return 0;
     });
 
+    public static Pattern Repeat(string text, int atleast = 0, int atmost = int.MaxValue) =>
+        Repeat(false, text, atleast, atmost);
+    public static Pattern Repeat(bool ignoreCasing, string text, int atleast = 0) =>
+        Repeat(ignoreCasing, text, atleast, int.MaxValue);
+    public static Pattern Repeat(bool ignoreCasing, string text, int atleast, int atmost) => new((str, s, e, p) =>
+    {
+        int count = 0;
+        for (int j = 0; s < e; s++)
+        {
+            if (ignoreCasing ? char.ToUpperInvariant(text[j]) != char.ToUpperInvariant(str[s]) : text[j] != str[s])
+                break;
+            else
+                j++;
+            if (j == text.Length)
+            {
+                j = 0;
+                count++;
+            }
+        }
+        if (count >= atleast && count <= atmost)
+            return p.Logic(str, s, e, p);
+        else
+        {
+            if (count == 0)
+                return 0;
+            else
+                return -1;
+        }
+    });
+
     public static Pattern Custom(Func<string, int, int, Pattern, int> logic) =>
         new(logic);
 }
