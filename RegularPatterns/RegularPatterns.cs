@@ -128,6 +128,9 @@ public struct Pattern
                 return -1;
         }
     }, nameof(Repeat));
+
+    public static Pattern Custom(Func<string, int, int, Pattern, int> logic, string customName = "CustomPattern") =>
+        new(logic, customName);
 }
 
 public static class PatternExtensions
