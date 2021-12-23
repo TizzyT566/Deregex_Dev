@@ -1,4 +1,4 @@
-# Deregex_Dev
+# RegularPatterns
 
 A small alternative to regex.
 
@@ -68,3 +68,43 @@ foreach(StringRange item in rss.RangesOf(Text("<item>"), Any, Text("</item>")))
     Console.WriteLine();
 }
 ```
+
+### Custom Patterns
+
+You can make your own patterns as long as they conform to the following.
+
+```csharp
+/// <param name="str">The source string.</param>
+/// <param name="s">The starting index.</param>
+/// <param name="e">The ending index.</param>
+/// <param name="p">The next Pattern in the sequence.</param>
+/// <return>A PatternState</return>
+(str, s, e, p) =>
+{
+    // custom code here
+}
+```
+
+To construct your pattern use Custom() method, an optional name can be specified like so:
+```csharp
+using static System.Text.RegularPatterns.Pattern;
+
+Pattern customPattern = Custom((str, s, e, p) =>
+{
+    // custom code here
+}, "MyCustomPattern");
+```
+
+All paths must return either an integer or PatternState. Where
+
+0 == PatternState.Backtrack,
+-1 == PatternState.Abort,
+
+and all possitive integers are regarded as success and represent the ending index of a match.
+If there is another pattern p then the Logic method of that pattern should be invoked like so.
+
+```csharp
+return p.Logic(str, s, e, p);
+```
+
+Where s is the new starting index for the next pattern.
