@@ -1,30 +1,36 @@
-﻿using System.Text;
-using System.Text.RegularPatterns;
+﻿using System.Text.RegularPatterns;
 using static System.Text.RegularPatterns.Pattern;
 
-using HttpClient client = new();
+string rss = @$"<?xml version=""1.0"" encoding=""UTF-8"" ?>
+<rss version=""2.0"">
 
-string source = "http://www.mangahere.cc";
-string rss = await client.GetStringAsync("http://www.mangahere.cc/directory/2.htm?az");
+<channel>
+  <title>W3Schools Home Page</title>
+  <link>https://www.w3schools.com</link>
+  <description>Free web building tutorials</description>
+  <item>
+    <title>RSS Tutorial</title>
+    <link>https://www.w3schools.com/xml/xml_rss.asp</link>
+    <description>New RSS tutorial on W3Schools</description>
+  </item>
+  <item>
+    <title>XML Tutorial</title>
+    <link>https://www.w3schools.com/xml</link>
+    <description>New XML tutorial on W3Schools</description>
+  </item>
+</channel>
 
-int startIndex = rss.IndexOf("manga-list-1-list line");
+</rss>";
 
-StringBuilder sb = new();
 
-foreach (StringRange range in rss.RangesOf(startIndex, Text("<li>"), Any, Text("</li>")))
+foreach(StringRange item in rss.RangesOf(Text("<item>"), Any, Text("</item>")))
 {
-    StringRange link = rss.RangeOf(range, Text("<a href=\"")).Between(Text("\""));
-    StringRange title = rss.RangeOf(link.End, Text("title=\"")).Between(Text("\""));
-    StringRange image = rss.RangeOf(title.End, Text("<img class=\"manga-list-1-cover\" src=\"")).Between(Text("\""));
-    StringRange score = rss.RangeOf(new Range(title.End, range.End), Text("<span class=\"item-score\">")).Between(Text("</span>"));
+    StringRange title = item.RangeOf(Text("<title>")).Between(Text("</title>"));
+    StringRange link = item.RangeOf(title, Text("<link>")).Between(Text("</link>"));
+    StringRange description = item.RangeOf(link, Text("<description>")).Between(Text("</description>"));
 
-    sb.AppendLine(title);
-    sb.AppendLine(score);
-    sb.AppendLine(source + link);
-    sb.AppendLine(image);
-
-    //Console.WriteLine(score);
-    sb.AppendLine();
+    Console.WriteLine(title);
+    Console.WriteLine(link);
+    Console.WriteLine(description);
+    Console.WriteLine();
 }
-
-File.WriteAllText(@"C:\Users\tizzy\Desktop\managa.txt", sb.ToString());
