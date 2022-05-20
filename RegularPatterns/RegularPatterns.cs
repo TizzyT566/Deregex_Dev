@@ -1,7 +1,8 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
+using System;
 
-namespace System.Text.RegularPatterns;
+namespace RegularPatterns;
 
 /// <summary>
 /// The result of a Pattern.
@@ -192,24 +193,34 @@ public struct Pattern
     /// A pattern to accept only the specified arguments.
     /// </summary>
     /// <param name="texts">A list of arguments which to be included.</param>
-    public static Pattern Text(params string[] texts) => Text(false, texts);
+    public static Pattern Text(params string[] texts) => Text(false, false, texts);
     /// <summary>
     /// A pattern to accept only the specified arguments.
     /// </summary>
     /// <param name="ignoreCasing">true to ignore case sensitivity, otherwise false.</param>
     /// <param name="texts">A list of arguments which to be included.</param>
-    public static Pattern Text(bool ignoreCasing, params string[] texts) => new((str, s, e, p) =>
+    public static Pattern Text(bool ignoreCasing, bool acceptEnds = false, params string[] texts) => new((str, s, e, p) =>
     {
+        if (acceptEnds && s == e - 1)
+        {
+            return e;
+        }
+
         int idx = s;
         foreach (string text in texts)
         {
             idx = s;
             int j = 0;
             for (; j < text.Length && idx < e; idx++)
+            {
                 if (ignoreCasing ? char.ToUpperInvariant(text[j]) == char.ToUpperInvariant(str[idx]) : text[j] == str[idx])
                     j++;
                 else
                     break;
+            }
+
+
+
             if (j == text.Length)
             {
                 int result = p.Logic(str, idx, e, p);
@@ -459,7 +470,10 @@ public static class PatternExtensions
             {
                 int result = patterns[0].Logic(@this, s, length, patternChain);
                 if (result > 0)
+                {
                     ranges.Add(new(@this, s, result));
+                    s = result;
+                }
             }
         }
         return ranges.ToArray();
