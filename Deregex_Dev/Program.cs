@@ -23,6 +23,7 @@ string rss = @$"<?xml version=""1.0"" encoding=""UTF-8"" ?>
 </rss>";
 
 
+
 foreach(StringRange item in rss.RangesOf(Text("<item>"), Any, Text("</item>")))
 {
     StringRange title = item.RangeOf(Text("<title>")).Between(Text("</title>"));
